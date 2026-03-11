@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 會議記錄助手</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 900px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: #667eea;
+      margin-right: 10px;
+      border-radius: 2px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.3s;
+    }
+
+    input[type="file"]:focus,
+    input[type="text"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.loading {
+      background: #e3f2fd;
+      color: #1976d2;
+      border-left: 4px solid #1976d2;
+    }
+
+    .status.success {
+      background: #e8f5e9;
+      color: #388e3c;
+      border-left: 4px solid #388e3c;
+    }
+
+    .status.error {
+      background: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #c62828;
+    }
+
+    .output-section {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 6px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .output-section.show {
+      display: block;
+    }
+
+    .output-content {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      line-height: 1.6;
+      color: #333;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .email-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .email-input input {
+      flex: 1;
+    }
+
+    .email-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .email-tag {
+      background: #667eea;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .email-tag button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 0;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎙️ AI 會議記錄助手</h1>
+    <p class="subtitle">智能轉錄、生成和分發會議記錄</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('record')">錄音</button>
+      <button class="tab" onclick="switchTab('upload')">上傳</button>
+      <button class="tab" onclick="switchTab('manual')">手動輸入</button>
+    </div>
+
+    <!-- 錄音標籤 -->
+    <div id="record" class="tab-content active">
+      <div class="section">
+        <div class="section-title">開始錄音</div>
+        <div class="input-group">
+          <button class="btn-primary" id="recordBtn" onclick="toggleRecording()">🔴 開始錄音</button>
+        </div>
+        <div id="recordingTime" style="text-align: center; color: #999; font-size: 14px; display: none;">
+          錄音時間: <span id="timeDisplay">00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 上傳標籤 -->
+    <div id="upload" class="tab-content">
+      <div class="section">
+        <div class="section-title">上傳音頻文件</div>
+        <div class="input-group">
+          <input type="file" id="audioFile" accept="audio/*" onchange="handleFileSelect(event)">
+        </div>
+      </div>
+    </div>
+
+    <!-- 手動輸入標籤 -->
+    <div id="manual" class="tab-content">
+      <div class="section">
+        <div class="section-title">手動輸入文本</div>
+        <div class="input-group">
+          <textarea id="manualTranscript" placeholder="在此輸入會議記錄或轉錄文本..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 狀態信息 -->
+    <div id="status" class="status"></div>
+
+    <!-- 模板選擇 -->
+    <div class="section">
+      <div class="section-title">會議記錄模板</div>
+      <div class="input-group">
+        <select id="templateSelect" onchange="handleTemplateChange()">
+          <option value="default">使用默認模板</option>
+          <option value="custom">自定義模板</option>
+        </select>
+      </div>
+      <div id="customTemplateDiv" style="display: none;">
+        <div class="input-group">
+          <textarea id="customTemplate" placeholder="輸入自定義模板..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按鈕 -->
+    <div class="section">
+      <div class="button-group">
+        <button class="btn-primary" onclick="generateMinutes()">✨ 生成會議記錄</button>
+        <button class="btn-secondary" onclick="clearAll()">🗑️ 清空</button>
+      </div>
+    </div>
+
+    <!-- 輸出部分 -->
+    <div id="outputSection" class="output-section">
+      <div class="section-title">生成的會議記錄</div>
+      <div id="minutesOutput" class="output-content"></div>
+
+      <div class="section-title">發送郵件</div>
+      <div class="input-group">
+        <div class="email-input">
+          <input type="email" id="emailInput" placeholder="輸入收件人郵箱地址">
+          <button class="btn-secondary" onclick="addEmail()" style="flex: 0 0 auto; width: auto;">添加</button>
+        </div>
+      </div>
+      <div id="emailList" class="email-list"></div>
+
+      <div class="button-group">
+        <button class="btn-primary" onclick="downloadWord()">📥 下載 Word</button>
+        <button class="btn-primary" onclick="sendEmail()">📧 發送郵件</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordingStartTime;
+    let recordingTimer;
+    let isRecording = false;
+    let currentTranscript = '';
+    let currentMinutes = '';
+    let recipients = [];
+
+    // 標籤切換
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // 顯示狀態信息
+    function showStatus(message, type = 'loading') {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = `status show ${type}`;
+    }
+
+    // 隱藏狀態信息
+    function hideStatus() {
+      document.getElementById('status').classList.remove('show');
+    }
+
+    // 開始/停止錄音
+    async function toggleRecording() {
+      const btn = document.getElementById('recordBtn');
+      
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+          };
+          
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            await transcribeAudio(audioBlob);
+            stream.getTracks().forEach(track => track.stop());
+          };
+          
+          mediaRecorder.start();
+          isRecording = true;
+          btn.textContent = '⏹️ 停止錄音';
+          btn.style.background = '#d32f2f';
+          
+          recordingStartTime = Date.now();
+          document.getElementById('recordingTime').style.display = 'block';
+          recordingTimer = setInterval(updateRecordingTime, 1000);
+          
+          showStatus('正在錄音...', 'loading');
+        } catch (error) {
+          showStatus('無法訪問麥克風: ' + error.message, 'error');
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.textContent = '🔴 開始錄音';
+        btn.style.background = '#667eea';
+        clearInterval(recordingTimer);
+        document.getElementById('recordingTime').style.display = 'none';
+      }
+    }
+
+    // 更新錄音時間
+    function updateRecordingTime() {
+      const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      document.getElementById('timeDisplay').textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    // 處理文件選擇
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        transcribeAudio(file);
+      }
+    }
+
+    // 轉錄音頻
+    async function transcribeAudio(audioBlob) {
+      showStatus('正在轉錄音頻...', 'loading');
+      
+      try {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.wav');
+        
+        const response = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) throw new Error('轉錄失敗');
+        
+        const data = await response.json();
+        currentTranscript = data.text;
+        
+        showStatus('轉錄完成！', 'success');
+        setTimeout(hideStatus, 3000);
+      } catch (error) {
+        showStatus('轉錄失敗: ' + error.message, 'error');
+      }
+    }
+
+    // 處理模板變更
+    function handleTemplateChange() {
+      const select = document.getElementById('templateSelect');
+      const customDiv = document.getElementById('customTemplateDiv');
+      customDiv.style.display = select.value === 'custom' ? 'block' : 'none';
+    }
+
+    // 生成會議記錄
+    async function generateMinutes() {
+      let transcript = currentTranscript;
+      
+      if (!transcript) {
+        const manualInput = document.getElementById('manualTranscript').value;
+        if (manualInput) {
+          transcript = manualInput;
+        } else {
+          showStatus('請先錄音、上傳或輸入會議記錄', 'error');
+          return;
+        }
+      }
+
+      showStatus('正在生成會議記錄...', 'loading');
+      
+      try {
+        const templateSelect = document.getElementById('templateSelect').value;
+        let template = '';
+        
+        if (templateSelect === 'custom') {
+          template = document.getElementById('customTemplate').value;
+        }
+        
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript, template })
+        });
+        
+        if (!response.ok) throw new Error('生成失敗');
+        
+        const data = await response.json();
+        currentMinutes = data.minutes;
+        
+        document.getElementById('minutesOutput').textContent = currentMinutes;
+        document.getElementById('outputSection').classList.add('show');
+        
+        showStatus('會議記錄生成成功！', 'success');
+        setTimeout(hideStatus, 3000);
+      } catch (error) {
+        showStatus('生成失敗: ' + error.message, 'error');
+      }
+    }
+
+    // 添加郵箱
+    function addEmail() {
+      const input = document.getElementById('emailInput');
+      const email = input.value.trim();
+      
+      if (!email) {
+        showStatus('請輸入郵箱地址', 'error');
+        return;
+      }
+      
+      if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        showStatus('郵箱格式不正確', 'error');
+        return;
+      }
+      
+      if (recipients.includes(email)) {
+        showStatus('該郵箱已添加', 'error');
+        return;
+      }
+      
+      recipients.push(email);
+      input.value = '';
+      updateEmailList();
+    }
+
+    // 更新郵箱列表
+    function updateEmailList() {
+      const list = document.getElementById('emailList');
+      list.innerHTML = recipients.map(email => `
+        <div class="email-tag">
+          ${email}
+          <button onclick="removeEmail('${email}')">×</button>
+        </div>
+      `).join('');
+    }
+
+    // 移除郵箱
+    function removeEmail(email) {
+      recipients = recipients.filter(e => e !== email);
+      updateEmailList();
+    }
+
+    // 下載 Word
+    async function downloadWord() {
+      if (!currentMinutes) {
+        showStatus('請先生成會議記錄', 'error');
+        return;
+      }
+
+      showStatus('正在生成 Word 文檔...', 'loading');
+      
+      try {
+        const response = await fetch('/api/generate-word', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            minutes: currentMinutes,
+            filename: `meeting-minutes-${new Date().toISOString().split('T')[0]}.docx`
+          })
+        });
+        
+        if (!response.ok) throw new Error('生成失敗');
+        
+        const data = await response.json();
+        const link = document.createElement('a');
+        link.href = data.filePath;
+        link.download = data.filename;
+        link.click();
+        
+        showStatus('Word 文檔已下載', 'success');
+        setTimeout(hideStatus, 3000);
+      } catch (error) {
+        showStatus('下載失敗: ' + error.message, 'error');
+      }
+    }
+
+    // 發送郵件
+    async function sendEmail() {
+      if (!currentMinutes) {
+        showStatus('請先生成會議記錄', 'error');
+        return;
+      }
+
+      if (recipients.length === 0) {
+        showStatus('請添加至少一個收件人', 'error');
+        return;
+      }
+
+      showStatus('正在發送郵件...', 'loading');
+      
+      try {
+        const response = await fetch('/api/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipients,
+            subject: `會議記錄 - ${new Date().toLocaleDateString('zh-CN')}`,
+            content: `<pre>${currentMinutes}</pre>`
+          })
+        });
+        
+        if (!response.ok) throw new Error('發送失敗');
+        
+        showStatus('郵件已發送！', 'success');
+        setTimeout(hideStatus, 3000);
+      } catch (error) {
+        showStatus('發送失敗: ' + error.message, 'error');
+      }
+    }
+
+    // 清空所有
+    function clearAll() {
+      currentTranscript = '';
+      currentMinutes = '';
+      recipients = [];
+      document.getElementById('manualTranscript').value = '';
+      document.getElementById('audioFile').value = '';
+      document.getElementById('customTemplate').value = '';
+      document.getElementById('emailInput').value = '';
+      document.getElementById('emailList').innerHTML = '';
+      document.getElementById('outputSection').classList.remove('show');
+      hideStatus();
+    }
+  </script>
+</body>
+</html>
